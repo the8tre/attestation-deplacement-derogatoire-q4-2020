@@ -55,6 +55,7 @@ const validateInput = function (input) {
 
 app.use(bodyParser.json())
 app.post('/', function (req, res) {
+  console.log(JSON.stringify(req.body))
   const body = req.body
   if (!validateInput(body)) {
     res.sendStatus(400)
