@@ -1,1 +1,1 @@
-web: node out/server.js
+web: node --icu-data-dir=node_modules/full-icu out/server.js

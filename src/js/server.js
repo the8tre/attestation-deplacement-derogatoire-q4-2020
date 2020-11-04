@@ -1,4 +1,6 @@
 import { generatePdf } from './pdf-util.js'
+import removeAccents from 'remove-accents'
+
 import { readFileSync } from 'fs'
 
 const PORT = process.env.PORT || 5000
@@ -30,6 +32,15 @@ if (!globalThis.Blob) {
   globalThis.Blob = Blob
 }
 
+const toAscii = function (string) {
+  if (typeof string !== 'string') {
+    throw new Error('Need string')
+  }
+  const accentsRemoved = removeAccents(string)
+  const asciiString = accentsRemoved.replace(/[^\x00-\x7F]/g, '') // eslint-disable-line no-control-regex
+  return asciiString
+}
+
 async function run (profile, reasons) {
   const blob = await generatePdf(profile, reasons, null)
   const buffer = await blob.arrayBuffer()
@@ -37,19 +48,30 @@ async function run (profile, reasons) {
 }
 
 const validateInput = function (input) {
-  if (!input || !input.profile || !input.reasons) {
-    return false
+  let valid = false
+  if (input &&
+    input.profile &&
+    input.reasons &&
+    typeof input.profile.firstname === 'string' &&
+    typeof input.profile.lastname === 'string' &&
+    typeof input.profile.birthday === 'string' &&
+    typeof input.profile.placeofbirth === 'string' &&
+    typeof input.profile.address === 'string' &&
+    typeof input.profile.zipcode === 'string' &&
+    typeof input.profile.city === 'string' &&
+    typeof input.profile.datesortie === 'string' &&
+    typeof input.profile.heuresortie === 'string' &&
+    typeof input.reasons === 'string') {
+    valid = true
+
+    if (input.profile.datesortie.indexOf('-') > 0) {
+      input.profile.datesortie = input.profile.datesortie.replace(/-/g, '/')
+    }
+
+    for (const key in input.profile) {
+      input.profile[key] = toAscii(input.profile[key])
+    }
   }
-  const valid = typeof input.profile.firstname === 'string' &
-    typeof input.profile.lastname === 'string' &
-    typeof input.profile.birthday === 'string' &
-    typeof input.profile.placeofbirth === 'string' &
-    typeof input.profile.address === 'string' &
-    typeof input.profile.zipcode === 'string' &
-    typeof input.profile.city === 'string' &
-    typeof input.profile.datesortie === 'string' &
-    typeof input.profile.heuresortie === 'string' &
-    typeof input.reasons === 'string'
   return valid
 }
 
@@ -74,4 +96,5 @@ app.post('/', function (req, res) {
     })
 })
 
-app.listen(PORT, () => console.log(`Listening on ${PORT}`))
+const startedAt = (new Date()).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+app.listen(PORT, () => console.log(`Listening on ${PORT}, started at ${startedAt}`))
