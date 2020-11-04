@@ -72,7 +72,8 @@
     "cross-blob": "^2.0.0",
     "express": "^4.17.1",
     "pdf-lib": "^1.11.2",
-    "qrcode": "^1.4.4"
+    "qrcode": "^1.4.4",
+    "remove-accents": "^0.4.2"
   },
   "browserslist": [
     "last 5 versions"
